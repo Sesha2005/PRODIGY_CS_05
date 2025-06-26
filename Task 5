@@ -1,0 +1,44 @@
+import scapy.all as scapy
+
+def packet_callback(packet):
+    if packet.haslayer(scapy.IP):
+        src_ip = packet[scapy.IP].src
+        dst_ip = packet[scapy.IP].dst
+        protocol = packet[scapy.IP].proto
+
+        print(f"\n📡 New Packet Captured")
+        print(f"Source IP      : {src_ip}")
+        print(f"Destination IP : {dst_ip}")
+        print(f"Protocol       : {protocol} ({'TCP' if protocol == 6 else 'UDP' if protocol == 17 else 'Other'})")
+
+        if packet.haslayer(scapy.TCP):
+            print("🔍 TCP Packet")
+            if packet.haslayer(scapy.Raw):
+                try:
+                    payload = packet[scapy.Raw].load
+                    decoded_payload = payload.decode('utf-8', 'ignore')
+                    print(f"Payload        : {decoded_payload}")
+                except Exception as e:
+                    print("⚠️ Cannot decode TCP payload.")
+            else:
+                print("No TCP payload found.")
+
+        elif packet.haslayer(scapy.UDP):
+            print("🔍 UDP Packet")
+            if packet.haslayer(scapy.Raw):
+                try:
+                    payload = packet[scapy.Raw].load
+                    decoded_payload = payload.decode('utf-8', 'ignore')
+                    print(f"Payload        : {decoded_payload}")
+                except Exception as e:
+                    print("⚠️ Cannot decode UDP payload.")
+            else:
+                print("No UDP payload found.")
+
+def start_sniffing():
+    print("🔐 Starting packet sniffing... Press Ctrl+C to stop.\n")
+    # You can apply filters like filter="tcp"
+    scapy.sniff(filter="ip", store=False, prn=packet_callback)
+
+if __name__ == "__main__":
+    start_sniffing()
